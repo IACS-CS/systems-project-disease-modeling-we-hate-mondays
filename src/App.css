@@ -1,0 +1,128 @@
+:root {
+  font-family: Inter, sans-serif;
+  font-size: 16px;
+}
+
+.world {
+  background-color: black;
+  color: white;
+  padding: 3em;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  position: relative;
+  box-sizing: border-box;
+}
+.subset-warning {
+  margin-top: -2em;
+  font-style: italic;
+}
+
+.population-box {
+  position: relative;
+}
+.patient {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  transition: all 0.5s;
+}
+.side-by-side {
+  display: flex;
+  align-items: start;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+table {
+  border-collapse: collapse;
+  margin-top: 1em;
+}
+th,
+td {
+  border: 1px solid rgb(124, 124, 124);
+  padding: 0.5em;
+  background-color: white;
+  color: #222;
+}
+th {
+  background-color: #312727;
+  color: white;
+}
+tr:nth-child(even) td {
+  background-color: #f2f2f2;
+  color: #222;
+}
+
+button {
+  padding: 0.5em 1em;
+  background-color: #312727;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.5s;
+  display: inline-block;
+  margin-right: 1em;
+}
+
+.chart-container {
+  border: 1px solid #aaa;
+}
+
+.tabs button {
+  background-color: #f2f2f2;
+  color: #222;
+  border-radius: 12px 12px 0 0;
+  margin-right: 4px;
+}
+.tabs button.active {
+  background-color: #312727;
+  color: white;
+}
+
+.top {
+  max-width: 1060px;
+  margin: auto;
+  padding: 1em;
+  border-bottom: 4px solid;
+  margin-bottom: 1em;
+}
+.simulation-container {
+  margin-top: 32px;
+}
+.back-button {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  max-height: 28px;
+  font-size: 14px;
+}
+
+.simulation-chooser {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 800px;
+  margin-inline: auto;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+.simulation-chooser ul {
+  list-style-type: none;
+  padding: 0;
+}
+.simulation-chooser li {
+  margin: 8px;
+}
+
+.vertical-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+label {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: start;
+  margin-right: 1em;
+}
