@@ -9,15 +9,10 @@ import {
 import { renderChart } from "../../lib/renderChart";
 import { renderTable } from "../../lib/renderTable";
 
-// Default parameters -- any properties you add here
-// will be passed to your disease model when it runs.
-
 let boxSize = 500; // World box size in pixels
-let maxSize = 1000; // Max number of icons we render (we can simulate big populations, but don't render them all...)
+let maxSize = 1000; // Max number of icons we render
 
-/**
- * Renders a subset of the population as a list of patients with emojis indicating their infection status.
- */
+// Render the population with emojis for each individual
 const renderPatients = (population) => {
   let amRenderingSubset = population.length > maxSize;
   const popSize = population.length;
@@ -25,13 +20,23 @@ const renderPatients = (population) => {
     population = population.slice(0, maxSize);
   }
 
+  // Function to render appropriate emoji based on individual's status
   function renderEmoji(p) {
-    if (p.newlyInfected) {
-      return "🤧"; // Sneezing Face for new cases
+    if (p.dead) {
+      return "💀"; // Skull emoji for dead individuals
+    } else if (p.newlyInfected) {
+      return "🤧"; // Sneezing face for newly infected individuals
     } else if (p.infected) {
-      return "🤢"; // Vomiting Face for already sick
+      return "🤢"; // Vomiting face for infected individuals
     } else {
-      return "😀"; // Healthy person
+      // Check age to assign elder or kid emoji
+      if (p.age >= 65) {
+        return "🧓"; // Elderly emoji for elderly people
+      } else if (p.age <= 12) {
+        return "👶"; // Baby emoji for young kids
+      } else {
+        return "😀"; // Healthy person (smiling face)
+      }
     }
   }
 
@@ -71,15 +76,11 @@ const renderPatients = (population) => {
 
 const Simulation = () => {
   const [popSize, setPopSize] = useState(20);
-  const [population, setPopulation] = useState(
-    createPopulation(popSize * popSize)
-  );
+  const [population, setPopulation] = useState(createPopulation(popSize * popSize));
   const [diseaseData, setDiseaseData] = useState([]);
   const [lineToGraph, setLineToGraph] = useState("infected");
   const [autoMode, setAutoMode] = useState(false);
-  const [simulationParameters, setSimulationParameters] = useState(
-    defaultSimulationParameters
-  );
+  const [simulationParameters, setSimulationParameters] = useState(defaultSimulationParameters);
 
   // Runs a single simulation step
   const runTurn = () => {
@@ -107,14 +108,9 @@ const Simulation = () => {
       <section className="top">
         <h1>My Custom Simulation</h1>
         <p>
-          Edit <code>simulationOne/diseaseModel.js</code> to define how your
-          simulation works. This one should try to introduce *one* complicating
-          feature to the basic model.
-        </p>
-
-        <p>
           Population: {population.length}. Infected:{" "}
-          {population.filter((p) => p.infected).length}
+          {population.filter((p) => p.infected).length}. Dead:{" "}
+          {population.filter((p) => p.dead).length}
         </p>
 
         <button onClick={runTurn}>Next Turn</button>
@@ -140,11 +136,28 @@ const Simulation = () => {
             />
             {simulationParameters.infectionChance}%
           </label>
+
+          <label>
+            Death Rate:
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              value={simulationParameters.deathRate}
+              onChange={(e) =>
+                setSimulationParameters({
+                  ...simulationParameters,
+                  deathRate: parseFloat(e.target.value),
+                })
+              }
+            />
+            {simulationParameters.deathRate}%
+          </label>
+
           <label>
             Population:
             <div className="vertical-stack">
-              {/* Population uses a "square" size to allow a UI that makes it easy to slide
-          from a small population to a large one. */}
               <input
                 type="range"
                 min="3"

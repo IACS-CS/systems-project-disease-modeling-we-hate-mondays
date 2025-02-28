@@ -1,5 +1,4 @@
 import { shufflePopulation } from "../../lib/shufflePopulation";
-
 /* Update this code to simulate a simple disease model! */
 
 /* For this simulation, let's consider a simple disease that spreads through contact.
@@ -19,103 +18,113 @@ and not interacting with others in each round.
 */
 
 /**
- * Authors: 
+ * Authors: Chery and Aditya
  * 
  * What we are simulating:
+ * we're trying to simutling the increasing and decreasing of people who infected 
  * 
  * What elements we have to add:
+ * we're adding emojis skull,sick,snezzing,baby emoji, and happy emoji altogether
+ * 
+ * The skull emoji will represent death 
+ * The sick emoji will represent the people who are infected already 
+ * The sneezing emoji will represent the people who are getting infected 
+ * the baby emoji represent the young kids in the pandemic 
+ * The old lady emoji is the represetion of the elders people being at high risk for getting covid 
  * 
  * In plain language, what our model does:
- * 
+ * we're going to create an Simulation of people that are going through the pandemic 
+ * we're going to oberser who gets sick,who dieds, and who is immune from covid
+ * We can increase the chances of the amount people that will die,infected to test the limit and see the results we're trying to see 
  */
 
 
 
+/* Simulation Parameters */
 export const defaultSimulationParameters = {
   infectionChance: 50,
-  // Add any new parameters you want here with their initial values
-  //  -- you will also have to add inputs into your jsx file if you want
-  // your user to be able to change these parameters.
+  deathRate: 10, // Probability of death after infection (percentage)
 };
 
-/* Creates your initial population. By default, we *only* track whether people
-are infected. Any other attributes you want to track would have to be added
-as properties on your initial individual. 
-
-For example, if you want to track a disease which lasts for a certain number
-of rounds (e.g. an incubation period or an infectious period), you would need
-to add a property such as daysInfected which tracks how long they've been infected.
-
-Similarily, if you wanted to track immunity, you would need a property that shows
-whether people are susceptible or immune (i.e. succeptibility or immunity) */
+/* Creates your initial population */
 export const createPopulation = (size = 1600) => {
   const population = [];
   const sideSize = Math.sqrt(size);
   for (let i = 0; i < size; i++) {
+    const age = Math.floor(Math.random() * 100); // Random age between 0-100
     population.push({
       id: i,
       x: (100 * (i % sideSize)) / sideSize, // X-coordinate within 100 units
       y: (100 * Math.floor(i / sideSize)) / sideSize, // Y-coordinate scaled similarly
       infected: false,
+      dead: false,
+      newlyInfected: false,
+      daysInfected: 0, // Track the number of days infected
+      age: age, // Add age property to individuals
     });
   }
-  // Infect patient zero...
+
+  // Infect patient zero
   let patientZero = population[Math.floor(Math.random() * size)];
   patientZero.infected = true;
   return population;
 };
 
-// Example: Maybe infect a person (students should customize this)
-const updateIndividual = (person, contact, params) => {
-  // Add some logic to update the individual!
-  // For example...
-  if (person.infected) {
-    // If they were already infected, they are no longer
-    // newly infected :)
-    person.newlyInfected = false;
+/* Update Individual's Infection and Death Status */
+export const updateIndividual = (person, contact, params) => {
+  // If the person is dead, no further updates happen
+  if (person.dead) {
+    return;
   }
-  if (contact.infected) {
+
+  // Handle if person is infected
+  if (person.infected) {
+    person.daysInfected += 1;
+
+    // Check if the person has been infected long enough to die
+    if (person.daysInfected > 5 && Math.random() * 100 < params.deathRate) {
+      person.dead = true; // Mark as dead
+      person.infected = false; // They are no longer contagious
+    }
+  }
+
+  // Infect the other person if they are in contact and not already infected
+  if (contact.infected && !person.infected && !person.dead) {
     if (Math.random() * 100 < params.infectionChance) {
-      if (!person.infected) {
-        person.newlyInfected = true;
-      }
       person.infected = true;
+      person.newlyInfected = true;
+      person.daysInfected = 0; // Reset infection timer for new infected person
     }
   }
 };
 
-// Example: Update population (students decide what happens each turn)
+/* Update Population based on contact */
 export const updatePopulation = (population, params) => {
-  // Include "shufflePopulation if you want to shuffle...
-  // population = shufflePopulation(population);
-  // Example logic... each person is in contact with the person next to them...
   for (let i = 0; i < population.length; i++) {
     let p = population[i];
-    // This logic just grabs the next person in line -- you will want to 
-    // change this to fit your model! 
+    // This logic grabs the next person in line to be in contact
     let contact = population[(i + 1) % population.length];
-    // Update the individual based on the contact...
     updateIndividual(p, contact, params);
   }
   return population;
 };
 
-
-// Stats to track (students can add more)
-// Any stats you add here should be computed
-// by Compute Stats below
+/* Stats to track (infected and dead) */
 export const trackedStats = [
   { label: "Total Infected", value: "infected" },
+  { label: "Total Dead", value: "dead" },
 ];
 
-// Example: Compute stats (students customize)
+/* Compute Stats for the simulation */
 export const computeStatistics = (population, round) => {
   let infected = 0;
-  for (let p of population) {
-    if (p.infected) {
-      infected += 1; // Count the infected
-    }
-  }
-  return { round, infected };
-};
+  let dead = 0;
 
+  // Iterate through population and count infected and dead individuals
+  for (let p of population) {
+    if (p.infected) infected += 1;
+    if (p.dead) dead += 1;
+  }
+
+  return { round, infected, dead }; // Return infected and dead count
+};
