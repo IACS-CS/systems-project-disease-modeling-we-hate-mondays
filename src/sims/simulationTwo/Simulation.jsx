@@ -10,11 +10,9 @@ import { renderChart } from "../../lib/renderChart";
 import { renderTable } from "../../lib/renderTable";
 
 let boxSize = 500; // World box size in pixels
-let maxSize = 1000; // Max number of icons we render (we can simulate big populations, but don't render them all...)
+let maxSize = 1000; // Max number of icons we render
 
-/**
- * Renders a subset of the population as a list of patients with emojis indicating their infection status.
- */
+// Render the population with emojis for each individual
 const renderPatients = (population) => {
   let amRenderingSubset = population.length > maxSize;
   const popSize = population.length;
@@ -22,13 +20,27 @@ const renderPatients = (population) => {
     population = population.slice(0, maxSize);
   }
 
+  // Function to render appropriate emoji based on individual's status
   function renderEmoji(p) {
-    if (p.newlyInfected) {
-      return "🤧"; // Sneezing Face for new cases
+    if (p.dead) {
+      return "💀"; // Skull emoji for dead individuals
+    } else if (p.newlyInfected) {
+      return "🤧"; // Sneezing face for newly infected individuals
     } else if (p.infected) {
-      return "🤢"; // Vomiting Face for already sick
+      return "🤢"; // Vomiting face for infected individuals
+    } else if (p.immune) {
+      return "🙂"; // Healthy emoji for immune individuals
+    } else if (p.vaccinated) {
+      return "💉"; // Shot emoji for vaccinated individuals
     } else {
-      return "😀"; // Healthy person
+      // Check age to assign elder or kid emoji
+      if (p.age >= 65) {
+        return "🧓"; // Elderly emoji for elderly people
+      } else if (p.age <= 12) {
+        return "👶"; // Baby emoji for young kids
+      } else {
+        return "😀"; // Healthy person (smiling face)
+      }
     }
   }
 
@@ -68,15 +80,12 @@ const renderPatients = (population) => {
 
 const Simulation = () => {
   const [popSize, setPopSize] = useState(20);
-  const [population, setPopulation] = useState(
-    createPopulation(popSize * popSize)
-  );
+  const [population, setPopulation] = useState(createPopulation(popSize * popSize, 0)); // Default no vaccinated
+  const [vaccinationRate, setVaccinationRate] = useState(0); // New state for vaccine rate
   const [diseaseData, setDiseaseData] = useState([]);
   const [lineToGraph, setLineToGraph] = useState("infected");
   const [autoMode, setAutoMode] = useState(false);
-  const [simulationParameters, setSimulationParameters] = useState(
-    defaultSimulationParameters
-  );
+  const [simulationParameters, setSimulationParameters] = useState(defaultSimulationParameters);
 
   // Runs a single simulation step
   const runTurn = () => {
@@ -88,8 +97,16 @@ const Simulation = () => {
 
   // Resets the simulation
   const resetSimulation = () => {
-    setPopulation(createPopulation(popSize * popSize));
+    setPopulation(createPopulation(popSize * popSize, vaccinationRate));
     setDiseaseData([]);
+  };
+
+  // Update the population's vaccination status based on vaccinationRate
+  const updateVaccinationStatus = (rate) => {
+    setVaccinationRate(rate);
+    const vaccinatedPopulation = Math.round((rate / 100) * popSize * popSize);
+    const newPopulation = createPopulation(popSize * popSize, rate);
+    setPopulation(newPopulation);
   };
 
   // Auto-run simulation effect
@@ -102,16 +119,11 @@ const Simulation = () => {
   return (
     <div>
       <section className="top">
-        <h1>My Second Custom Simulation</h1>
-        <p>
-          Edit <code>simulationTwo/diseaseModel.js</code> to define how your
-          simulation works. This one should try to replicate features of a real
-          world illness and/or intervention.
-        </p>
-
+        <h1>My Custom Simulation</h1>
         <p>
           Population: {population.length}. Infected:{" "}
-          {population.filter((p) => p.infected).length}
+          {population.filter((p) => p.infected).length}. Dead:{" "}
+          {population.filter((p) => p.dead).length}
         </p>
 
         <button onClick={runTurn}>Next Turn</button>
@@ -120,12 +132,45 @@ const Simulation = () => {
         <button onClick={resetSimulation}>Reset Simulation</button>
 
         <div>
-          {/* Add custom parameters here... */}
+          <label>
+            Infection Chance:
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              value={simulationParameters.infectionChance}
+              onChange={(e) =>
+                setSimulationParameters({
+                  ...simulationParameters,
+                  infectionChance: parseFloat(e.target.value),
+                })
+              }
+            />
+            {simulationParameters.infectionChance}%
+          </label>
+
+          <label>
+            Death Rate:
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              value={simulationParameters.deathRate}
+              onChange={(e) =>
+                setSimulationParameters({
+                  ...simulationParameters,
+                  deathRate: parseFloat(e.target.value),
+                })
+              }
+            />
+            {simulationParameters.deathRate}%
+          </label>
+
           <label>
             Population:
             <div className="vertical-stack">
-              {/* Population uses a "square" size to allow a UI that makes it easy to slide
-          from a small population to a large one. */}
               <input
                 type="range"
                 min="3"
@@ -142,6 +187,20 @@ const Simulation = () => {
                 }
               />
             </div>
+          </label>
+
+          {/* Vaccine Percentage Control */}
+          <label>
+            Vaccination Rate:
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              value={vaccinationRate}
+              onChange={(e) => updateVaccinationStatus(e.target.value)}
+            />
+            {vaccinationRate}%
           </label>
         </div>
       </section>
