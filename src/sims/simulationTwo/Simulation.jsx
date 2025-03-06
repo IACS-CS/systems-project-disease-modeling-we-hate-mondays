@@ -12,6 +12,22 @@ import { renderTable } from "../../lib/renderTable";
 let boxSize = 500; // World box size in pixels
 let maxSize = 1000; // Max number of icons we render
 
+// Function to create an individual with states to track infection
+function createIndividual(id, infected = false) {
+  return {
+    id,
+    infected: infected,
+    dead: false,
+    immune: false,
+    newlyInfected: false,
+    vaccinated: false,
+    age: Math.floor(Math.random() * 100), // Random age between 0 and 100
+    daysInfected: 0, // Tracks the number of days infected
+    daysRecovered: 0, // Tracks days in recovery before immunity
+    daysUntilDeath: null, // Tracks the number of days until death, if infected
+  };
+}
+
 // Render the population with emojis for each individual
 const renderPatients = (population) => {
   let amRenderingSubset = population.length > maxSize;
@@ -24,8 +40,6 @@ const renderPatients = (population) => {
   function renderEmoji(p) {
     if (p.dead) {
       return "💀"; // Skull emoji for dead individuals
-    } else if (p.newlyInfected) {
-      return "🤧"; // Sneezing face for newly infected individuals
     } else if (p.infected) {
       return "🤢"; // Vomiting face for infected individuals
     } else if (p.immune) {
@@ -33,14 +47,8 @@ const renderPatients = (population) => {
     } else if (p.vaccinated) {
       return "💉"; // Shot emoji for vaccinated individuals
     } else {
-      // Check age to assign elder or kid emoji
-      if (p.age >= 65) {
-        return "🧓"; // Elderly emoji for elderly people
-      } else if (p.age <= 12) {
-        return "👶"; // Baby emoji for young kids
-      } else {
-        return "😀"; // Healthy person (smiling face)
-      }
+      // Default healthy emoji logic
+      return p.age >= 65 ? "🧓" : p.age <= 12 ? "👶" : "😀"; // Healthy person (smiling face)
     }
   }
 
@@ -80,7 +88,8 @@ const renderPatients = (population) => {
 
 const Simulation = () => {
   const [popSize, setPopSize] = useState(20);
-  const [population, setPopulation] = useState(createPopulation(popSize * popSize, 0)); // Default no vaccinated
+  const [healthyPopulation, setHealthyPopulation] = useState(createPopulation(popSize * popSize, false));
+  const [infectedPopulation, setInfectedPopulation] = useState(createPopulation(popSize * popSize, true)); // Initial infected group
   const [vaccinationRate, setVaccinationRate] = useState(0); // New state for vaccine rate
   const [diseaseData, setDiseaseData] = useState([]);
   const [lineToGraph, setLineToGraph] = useState("infected");
@@ -89,15 +98,22 @@ const Simulation = () => {
 
   // Runs a single simulation step
   const runTurn = () => {
-    let newPopulation = updatePopulation([...population], simulationParameters);
-    setPopulation(newPopulation);
-    let newStats = computeStatistics(newPopulation, diseaseData.length);
+    // Update both populations separately
+    let newHealthyPopulation = updatePopulation([...healthyPopulation], simulationParameters);
+    let newInfectedPopulation = updatePopulation([...infectedPopulation], simulationParameters);
+    setHealthyPopulation(newHealthyPopulation);
+    setInfectedPopulation(newInfectedPopulation);
+
+    // Combine populations and compute statistics
+    let combinedPopulation = [...newHealthyPopulation, ...newInfectedPopulation];
+    let newStats = computeStatistics(combinedPopulation, diseaseData.length);
     setDiseaseData([...diseaseData, newStats]);
   };
 
   // Resets the simulation
   const resetSimulation = () => {
-    setPopulation(createPopulation(popSize * popSize, vaccinationRate));
+    setHealthyPopulation(createPopulation(popSize * popSize, false)); // Reset healthy population
+    setInfectedPopulation(createPopulation(popSize * popSize, true)); // Reset infected population
     setDiseaseData([]);
   };
 
@@ -105,8 +121,10 @@ const Simulation = () => {
   const updateVaccinationStatus = (rate) => {
     setVaccinationRate(rate);
     const vaccinatedPopulation = Math.round((rate / 100) * popSize * popSize);
-    const newPopulation = createPopulation(popSize * popSize, rate);
-    setPopulation(newPopulation);
+    const newHealthyPopulation = createPopulation(popSize * popSize, false);
+    const newInfectedPopulation = createPopulation(popSize * popSize, true);
+    setHealthyPopulation(newHealthyPopulation);
+    setInfectedPopulation(newInfectedPopulation);
   };
 
   // Auto-run simulation effect
@@ -114,16 +132,16 @@ const Simulation = () => {
     if (autoMode) {
       setTimeout(runTurn, 500);
     }
-  }, [autoMode, population]);
+  }, [autoMode, healthyPopulation, infectedPopulation]);
 
   return (
     <div>
       <section className="top">
         <h1>My Custom Simulation</h1>
         <p>
-          Population: {population.length}. Infected:{" "}
-          {population.filter((p) => p.infected).length}. Dead:{" "}
-          {population.filter((p) => p.dead).length}
+          Healthy Population: {healthyPopulation.length}. Infected:{" "}
+          {infectedPopulation.filter((p) => p.infected).length}. Dead:{" "}
+          {healthyPopulation.filter((p) => p.dead).length + infectedPopulation.filter((p) => p.dead).length}
         </p>
 
         <button onClick={runTurn}>Next Turn</button>
@@ -213,7 +231,7 @@ const Simulation = () => {
             className="population-box"
             style={{ width: boxSize, height: boxSize }}
           >
-            {renderPatients(population)}
+            {renderPatients([...healthyPopulation, ...infectedPopulation])}
           </div>
         </div>
 

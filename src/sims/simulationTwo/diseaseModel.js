@@ -16,34 +16,32 @@ You can implement a simple model which does one of the following:
 3. Add a "quarantine" percentage to the handshake model: if a person is infected, they have a chance of being quarantined
    and not interacting with others in each round.
 */
-//
+
+// Authors: Chery and Aditya
 
 /**
- * Authors: Chery and Aditya
- * 
  * What we are simulating:
- * we're trying to simulate the increasing and decreasing of people who are infected
+ * We're trying to simulate the increasing and decreasing of people who are infected.
  * 
  * What elements we have to add:
- * we're adding emojis skull, sick, sneezing, baby emoji, and happy emoji altogether
+ * We're adding emojis for skull (death), sick (infected), sneezing (getting infected), baby (young), and elder (high-risk) people.
  * 
- * The skull emoji will represent death 
- * The sick emoji will represent the people who are infected already 
- * The sneezing emoji will represent the people who are getting infected 
- * The baby emoji represents the young kids in the pandemic 
- * The old lady emoji represents the elders who are at high risk for getting COVID
+ * The skull emoji will represent death.
+ * The sick emoji will represent infected people.
+ * The sneezing emoji will represent people who are getting infected.
+ * The baby emoji represents the young kids, who are less likely to be affected severely.
+ * The elder emoji represents older individuals who are at high risk of being infected and dying.
  * 
  * In plain language, what our model does:
- * We're going to create a simulation of people that are going through the pandemic 
- * We will observe who gets sick, who dies, and who is immune to COVID
- * We can increase the chances of death and infection to test the limits and see the results we're aiming for.
+ * We're simulating the spread of a disease, tracking who gets sick, who dies, and who recovers.
+ * We can increase the chances of infection and death to test the model's behavior.
  */
 
 /* Simulation Parameters */
 export const defaultSimulationParameters = {
   infectionChance: 50, // Chance of infection on contact
   deathRate: 10, // Chance of death after infection
-  recoveryRate: 20, // Chance of recovering after a certain number of days
+  recoveryRate: 20, // Chance of recovery after a set number of days
   quarantineChance: 10, // Chance of being quarantined
   recoveryDays: 7, // Number of days until recovery
   vaccinationChance: 30, // Chance of vaccinating an individual
@@ -86,6 +84,17 @@ export const updateIndividual = (person, contact, params) => {
     return;
   }
 
+  // Modify infection chance and death rate based on age
+  let adjustedInfectionChance = params.infectionChance;
+  let adjustedDeathRate = params.deathRate;
+
+  // Increase infection and death risk for elderly people (age 65 and older)
+  if (person.age >= 65) {
+    adjustedInfectionChance += 30; // Older people are more likely to get infected
+    adjustedDeathRate += 30; // Older people have a higher chance of dying from the disease
+    person.emoji = '🧓'; // Elder emoji
+  }
+
   // Handle infection, death, and recovery logic
   if (person.infected) {
     person.daysInfected += 1;
@@ -98,7 +107,7 @@ export const updateIndividual = (person, contact, params) => {
     }
 
     // Check if the person has been infected long enough to die
-    if (person.daysInfected > 5 && Math.random() * 100 < params.deathRate) {
+    if (person.daysInfected > 5 && Math.random() * 100 < adjustedDeathRate) {
       person.dead = true;
       person.infected = false;
       person.emoji = '💀'; // Set emoji for death
@@ -106,7 +115,7 @@ export const updateIndividual = (person, contact, params) => {
   }
 
   // If the person is in contact with an infected person and isn't dead or recovered
-  if (contact.infected && !person.infected && !person.dead && Math.random() * 100 < params.infectionChance) {
+  if (contact.infected && !person.infected && !person.dead && Math.random() * 100 < adjustedInfectionChance) {
     person.infected = true;
     person.newlyInfected = true;
     person.daysInfected = 0;
