@@ -16,6 +16,7 @@ You can implement a simple model which does one of the following:
 3. Add a "quarantine" percentage to the handshake model: if a person is infected, they have a chance of being quarantined
    and not interacting with others in each round.
 */
+//
 
 /**
  * Authors: Chery and Aditya
