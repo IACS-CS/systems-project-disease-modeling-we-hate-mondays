@@ -36,13 +36,13 @@ and not interacting with others in each round.
  * We're going to create a simulation of people that are going through the pandemic
  * We will observe who gets sick, who dies, and who is immune to COVID
  * We can increase the chances of death and infection to test the limits and see the results we're aiming for.
-*
-* Credits: 
-* Chery and Aditya
-* Used Github Copilot to help with the code throughout.
-* Worked with Mr. Hinkle to understand how to add variable
-* death rates for different ages. 
-*/
+ *
+ * Credits:
+ * Chery and Aditya
+ * Used Github Copilot to help with the code throughout.
+ * Worked with Mr. Hinkle to understand how to add variable
+ * death rates for different ages.
+ */
 
 /* Simulation Parameters */
 export const defaultSimulationParameters = {
@@ -85,7 +85,25 @@ export const createPopulation = (size = 1600) => {
   return population;
 };
 
-/* Update Individual's Infection and Death Status */
+// Define age-specific death rates
+const ageSpecificDeathRates = {
+  young: 5, // Death rate for ages 0-12
+  adult: 10, // Death rate for ages 13-64
+  elderly: 20, // Death rate for ages 65+
+};
+
+// Function to get death rate based on age
+const getDeathRateByAge = (age) => {
+  if (age <= 12) {
+    return ageSpecificDeathRates.young;
+  } else if (age >= 65) {
+    return ageSpecificDeathRates.elderly;
+  } else {
+    return ageSpecificDeathRates.adult;
+  }
+};
+
+// Update Individual's Infection and Death Status
 export const updateIndividual = (person, contact, params) => {
   // If the person is dead, no further updates happen
   if (person.dead) {
@@ -109,14 +127,10 @@ export const updateIndividual = (person, contact, params) => {
     // Check if the person has been infected long enough to die (only one chance)
     if (person.daysInfected > 5 && !person.deathEvaluated) {
       person.deathEvaluated = true; // Mark that death chance has been evaluated
-      let deathRate;
-      if (person.age <= 12) {
-        deathRate = params.deathRates.young;
-      } else if (person.age <= 64) {
-        deathRate = params.deathRates.adult;
-      } else {
-        deathRate = params.deathRates.elderly;
-      }
+
+      // Get death rate based on age
+      const deathRate = getDeathRateByAge(person.age);
+
       if (Math.random() * 100 < deathRate) {
         person.dead = true;
         person.infected = false;

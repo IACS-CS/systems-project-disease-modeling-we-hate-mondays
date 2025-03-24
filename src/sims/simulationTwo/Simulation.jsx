@@ -1,5 +1,5 @@
 // model code from Mr. Hinkle
-// used Github Copilot to help add 
+// used Github Copilot to help add
 // sliders for death rates for young, adult, and elderly
 
 import React, { useEffect, useState } from "react";
@@ -145,9 +145,29 @@ const Simulation = () => {
   // Update the population's vaccination status based on vaccinationRate
   const updateVaccinationStatus = (rate) => {
     setVaccinationRate(rate);
-    const vaccinatedPopulation = Math.round((rate / 100) * popSize * popSize);
-    const newHealthyPopulation = createPopulation(popSize * popSize, false);
-    const newInfectedPopulation = createPopulation(popSize * popSize, true);
+
+    // Calculate the number of vaccinated individuals
+    const totalPopulation = popSize * popSize;
+    const vaccinatedCount = Math.round((rate / 100) * totalPopulation);
+
+    // Create new populations with vaccinated individuals
+    const newHealthyPopulation = createPopulation(totalPopulation, false).map(
+      (person, index) => {
+        if (index < vaccinatedCount) {
+          person.vaccinated = true; // Mark as vaccinated
+          person.emoji = "💉"; // Set emoji for vaccinated individuals
+        }
+        return person;
+      }
+    );
+
+    const newInfectedPopulation = createPopulation(totalPopulation, true).map(
+      (person) => {
+        person.vaccinated = false; // Ensure infected individuals are not vaccinated
+        return person;
+      }
+    );
+
     setHealthyPopulation(newHealthyPopulation);
     setInfectedPopulation(newInfectedPopulation);
   };
@@ -331,5 +351,19 @@ const Simulation = () => {
     </div>
   );
 };
+
+// If the person is in contact with an infected person and isn't dead, recovered, or vaccinated
+if (
+  contact.infected &&
+  !person.infected &&
+  !person.dead &&
+  !person.vaccinated && // Vaccinated individuals are immune
+  Math.random() * 100 < params.infectionChance
+) {
+  person.infected = true;
+  person.newlyInfected = true;
+  person.daysInfected = 0;
+  person.emoji = "🤧"; // Set emoji for sneezing/infected
+}
 
 export default Simulation;
