@@ -1,3 +1,7 @@
+// model code from Mr. Hinkle
+// used Github Copilot to help add 
+// sliders for death rates for young, adult, and elderly
+
 import React, { useEffect, useState } from "react";
 import {
   createPopulation,
@@ -48,7 +52,13 @@ const renderPatients = (population) => {
       return "💉"; // Shot emoji for vaccinated individuals
     } else {
       // Default healthy emoji logic
-      return p.age >= 65 ? "🧓" : p.age <= 12 ? "👶" : "😀"; // Healthy person (smiling face)
+      if (p.age >= 65) {
+        return "🧓"; // Elderly person
+      } else if (p.age <= 12) {
+        return "👶"; // Child
+      } else {
+        return "😀"; // Healthy person (smiling face)
+      }
     }
   }
 
@@ -88,24 +98,39 @@ const renderPatients = (population) => {
 
 const Simulation = () => {
   const [popSize, setPopSize] = useState(20);
-  const [healthyPopulation, setHealthyPopulation] = useState(createPopulation(popSize * popSize, false));
-  const [infectedPopulation, setInfectedPopulation] = useState(createPopulation(popSize * popSize, true)); // Initial infected group
+  const [healthyPopulation, setHealthyPopulation] = useState(
+    createPopulation(popSize * popSize, false)
+  );
+  const [infectedPopulation, setInfectedPopulation] = useState(
+    createPopulation(popSize * popSize, true)
+  ); // Initial infected group
   const [vaccinationRate, setVaccinationRate] = useState(0); // New state for vaccine rate
   const [diseaseData, setDiseaseData] = useState([]);
   const [lineToGraph, setLineToGraph] = useState("infected");
   const [autoMode, setAutoMode] = useState(false);
-  const [simulationParameters, setSimulationParameters] = useState(defaultSimulationParameters);
+  const [simulationParameters, setSimulationParameters] = useState(
+    defaultSimulationParameters
+  );
 
   // Runs a single simulation step
   const runTurn = () => {
     // Update both populations separately
-    let newHealthyPopulation = updatePopulation([...healthyPopulation], simulationParameters);
-    let newInfectedPopulation = updatePopulation([...infectedPopulation], simulationParameters);
+    let newHealthyPopulation = updatePopulation(
+      [...healthyPopulation],
+      simulationParameters
+    );
+    let newInfectedPopulation = updatePopulation(
+      [...infectedPopulation],
+      simulationParameters
+    );
     setHealthyPopulation(newHealthyPopulation);
     setInfectedPopulation(newInfectedPopulation);
 
     // Combine populations and compute statistics
-    let combinedPopulation = [...newHealthyPopulation, ...newInfectedPopulation];
+    let combinedPopulation = [
+      ...newHealthyPopulation,
+      ...newInfectedPopulation,
+    ];
     let newStats = computeStatistics(combinedPopulation, diseaseData.length);
     setDiseaseData([...diseaseData, newStats]);
   };
@@ -141,7 +166,8 @@ const Simulation = () => {
         <p>
           Healthy Population: {healthyPopulation.length}. Infected:{" "}
           {infectedPopulation.filter((p) => p.infected).length}. Dead:{" "}
-          {healthyPopulation.filter((p) => p.dead).length + infectedPopulation.filter((p) => p.dead).length}
+          {healthyPopulation.filter((p) => p.dead).length +
+            infectedPopulation.filter((p) => p.dead).length}
         </p>
 
         <button onClick={runTurn}>Next Turn</button>
@@ -220,6 +246,71 @@ const Simulation = () => {
             />
             {vaccinationRate}%
           </label>
+
+          <div>
+            <label>
+              Death Rate (Young):
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                value={simulationParameters.deathRates.young}
+                onChange={(e) =>
+                  setSimulationParameters({
+                    ...simulationParameters,
+                    deathRates: {
+                      ...simulationParameters.deathRates,
+                      young: parseFloat(e.target.value),
+                    },
+                  })
+                }
+              />
+              {simulationParameters.deathRates.young}%
+            </label>
+
+            <label>
+              Death Rate (Adult):
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                value={simulationParameters.deathRates.adult}
+                onChange={(e) =>
+                  setSimulationParameters({
+                    ...simulationParameters,
+                    deathRates: {
+                      ...simulationParameters.deathRates,
+                      adult: parseFloat(e.target.value),
+                    },
+                  })
+                }
+              />
+              {simulationParameters.deathRates.adult}%
+            </label>
+
+            <label>
+              Death Rate (Elderly):
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                value={simulationParameters.deathRates.elderly}
+                onChange={(e) =>
+                  setSimulationParameters({
+                    ...simulationParameters,
+                    deathRates: {
+                      ...simulationParameters.deathRates,
+                      elderly: parseFloat(e.target.value),
+                    },
+                  })
+                }
+              />
+              {simulationParameters.deathRates.elderly}%
+            </label>
+          </div>
         </div>
       </section>
 
