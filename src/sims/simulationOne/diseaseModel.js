@@ -37,6 +37,10 @@ and not interacting with others in each round.
  * We will observe who gets sick, who dies, and who is immune to COVID
  * We can increase the chances of death and infection to test the limits and see the results we're aiming for.
  */
+//Credits: 
+// Used ChatGPT for the death rate slider and other parts of the simulation 
+//The slider controls the chance of death when someone gets infected
+//The simulation shows how the disease spreads based on infection, recovery, and death rates.
 
 /* Simulation Parameters */
 export const defaultSimulationParameters = {
