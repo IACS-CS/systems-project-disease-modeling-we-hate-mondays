@@ -352,18 +352,4 @@ const Simulation = () => {
   );
 };
 
-// If the person is in contact with an infected person and isn't dead, recovered, or vaccinated
-if (
-  contact.infected &&
-  !person.infected &&
-  !person.dead &&
-  !person.vaccinated && // Vaccinated individuals are immune
-  Math.random() * 100 < params.infectionChance
-) {
-  person.infected = true;
-  person.newlyInfected = true;
-  person.daysInfected = 0;
-  person.emoji = "🤧"; // Set emoji for sneezing/infected
-}
-
 export default Simulation;
